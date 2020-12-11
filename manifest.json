@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name"            : "Slack Custom Status",
+  "description"     : "Set your favorite status in Slack with a single click",
+  "short_name"      : "SCS",
+  "version"         : "0.1",
+  "browser_action": {
+    "default_popup": "index.html",
+    "default_icon" : "images/slack-custom-status-128.png"
+  },
+  "permissions": [
+    "debugger",
+    "storage",
+    "https://slack.com/"
+  ],
+  "icons": { "16": "images/slack-custom-status-16.png",
+           "48": "images/slack-custom-status-48.png",
+          "128": "images/slack-custom-status-128.png" }
+}

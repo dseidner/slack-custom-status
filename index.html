@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html ng-app='app'>
+
+<head>
+  <title>Slack Custom Status</title>
+  <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body ng-controller='slackCustomCtrl'>
+  <!-- TOP NAV -->
+  <nav class="navbar navbar-default navbar-static-top" style="min-height: 40px; background-color: #375a7f;">
+    <div class="container">
+      <h4 style="color: white;">Slack Custom Status
+        <div class="btn-toolbar" role="toolbar" style="float: right">
+          <div class="btn-group" role="group">
+            <span class="glyphicon glyphicon-cog" aria-hidden="true" ng-click="toggleSettings = !toggleSettings" uib-tooltip="Settings" tooltip-placement="left-bottom"></span>
+          </div>
+          <div class="btn-group" role="group" aria-label="...">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true" ng-click="toggleNewEmoji = !toggleNewEmoji" style="color: white" uib-tooltip="Add a custom status" tooltip-placement="left-bottom"></span>
+          </div>
+        </div>
+      </h4>
+    </div>
+  </nav>
+  <div class='container'>
+
+    <!-- LIST OF CUSTOM STATUSES -->
+    <div class='row'>
+      <div class='col-xs-12'>
+        <ul class="list-group" ng-if="!firstTime">
+          <li class="list-group-item emoji-div" ng-repeat="e in slackstatuses track by $index">
+            <span class="glyphicon glyphicon-play" aria-hidden="true" ng-click="setStatus(e.short, e.text, e.pres, e.snooze)" style="color:green" uib-tooltip="Set this status"></span> :{{e.short}}:
+            <span ng-if="e.text.length"> <i>{{e.text}}</i></span>
+            <span class="glyphicon glyphicon-play-circle
+" aria-hidden="true" ng-if="e.pres" style="color:green" uib-tooltip="Mark as active"></span>
+            <span class="glyphicon glyphicon-time
+" aria-hidden="true" ng-if="!e.pres" style="color:orange" uib-tooltip="Mark as auto/away"></span>
+            <span class="badge" ng-if="e.snooze" style="float: inherit;" uib-tooltip="Snooze minutes to set"><span class="glyphicon glyphicon-hourglass
+" aria-hidden="true" style="color:white"></span>{{e.snooze}}</span>
+            <span class="glyphicon glyphicon-remove" aria-hidden="true" ng-click="removeEmoji($index)" style="color:red; float: right" uib-tooltip="Remove this status" tooltip-placement="left"></span>
+            <span class="glyphicon glyphicon-edit" aria-hidden="true" ng-click="editEmoji($index, e.short, e.text, e.pres, e.snooze)" style="float: right; padding-right: 5px;" uib-tooltip="Edit this status" tooltip-placement="left"></span>
+
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- CUSTOM STATUS INPUT FORM -->
+    <div class='row' ng-if="(toggleNewEmoji && !firstTime) || (!slackstatuses.length && !firstTime)" style="padding-bottom: 15px;">
+      <div class='col-xs-12'>
+        <h4>Add Custom Status</h4>
+        <div class="row">
+          <form ng-submit="addEmoji()">
+            <div class='col-xs-4' style="padding-right: 2px">
+              <input type='text' id='new-emoji' ng-model='form.emoji' class="form-control" placeholder="Emoji shortname" />
+            </div>
+            <div class='col-xs-8' style="padding-left: 2px;">
+              <input type='text' id='new-status' ng-model='form.text' class="form-control" placeholder="Status text" maxlength="100" />
+            </div>
+            <div class='col-xs-2' style="padding-top: 8px">
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" ng-model='form.pres'> Active?
+                </label>
+              </div>
+            </div>
+            <div class='col-xs-4' style="padding-top: 10px">
+              <input type='number' id='new-snooze' ng-model='form.snooze' class="form-control" placeholder="Snooze mins" />
+            </div>
+            <div class='col-xs-3' style="padding-top: 10px">
+              <button type="submit" class="btn btn-primary" style="display: inline-block" ng-disabled="!form.emoji">Add</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- SETTINGS -->
+    <div class='row emoji-div' ng-if="toggleSettings || firstTime" style="padding-bottom: 15px">
+      <div class="col-xs-12">
+        <h4>Settings
+          <span class="glyphicon glyphicon-question-sign" aria-hidden="true" ng-click="set.needHelp = !set.needHelp" style="margin-left: 5px;display: inline-block" ng-if="!firstTime" uib-tooltip="Need help getting a token?"></span></h4>
+        <div class="row">
+          <form ng-submit="changeSetting()" class="form-inline">
+            <div class="col-xs-9">
+              <label for="slacktokensetting">Slack Token</label>
+              <input type='text' id='slacktokensetting' ng-model='setting.token' class="form-control" placeholder="Slack token" />
+            </div>
+            <div class="col-xs-5" ng-if="setting.timeFormat" style="padding-top: 8px;">
+              <label for="timeformatsetting">Time Format <span class="glyphicon glyphicon-question-sign" aria-hidden="true" uib-tooltip="How time substitution will display with snooze and %t"></span></label>
+              <select ng-model="setting.timeFormat" class="form-control" id="timeformatsetting">
+                <option value="h:mm:ss a">{{ timeNow | amDateFormat:'h:mm:ss a'}}</option>
+                <option value="h:mm a">{{ timeNow | amDateFormat:'h:mm a'}}</option>
+                <option value="h:mm">{{ timeNow | amDateFormat:'h:mm'}}</option>
+              </select>              
+            </div>
+            <div class="col-xs-11" style="padding-top: 8px;">
+              <button type="submit" class="btn btn-primary" ng-disabled="!setting.token.length">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- HELP GROUP -->
+    <div class="row" ng-if="set.needHelp || firstTime">
+      <div class="col-xs-12">
+        <ol class="list-group">
+          <li class="list-group-item">
+            <p>1. Login to slack via your browser.</p>
+          </li>
+          <li class="list-group-item">
+            <p>2. Go to this URL: <a href="https://api.slack.com/custom-integrations/legacy-tokens" target="_blank">https://api.slack.com/custom-integrations/legacy-tokens</a></p>
+          </li>
+          <li class="list-group-item">
+            <p>3. Generate a legacy token and copy/paste it to the above setting. Then submit!</p>
+            <p><b>NOTE</b>: This token will not be passed back to the developer. It will be saved only to your Chrome storage.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+    
+    <!-- BOTTOM INFO/STATUS SECTION -->
+    <div class='row' ng-if="!firstTime">
+      <div class='col-xs-12'>
+        <b>Team</b>: <a ng-href="{{userDetails.data.url}}" target="_blank">{{userDetails.data.team}}</a><br/>
+        <b>User</b>: <span uib-tooltip="User ID: {{userDetails.data.user_id}}">{{userDetails.data.user}}</span><br/>
+        <b>Current Status</b>:
+        <span class="glyphicon glyphicon-play-circle
+  " aria-hidden="true" ng-if="currentUserPresence == 'active'" style="color:green" uib-tooltip="User is active"></span>
+        <span class="glyphicon glyphicon-time
+  " aria-hidden="true" ng-if="currentUserPresence == 'auto' || currentUserPresence == 'away'" style="color:orange" uib-tooltip="User is auto/away"></span> {{currentUserStatus.status_emoji}} <i>{{currentUserStatus.status_text}}</i>
+        <span class="glyphicon glyphicon-refresh" aria-hidden="true" ng-click="getCurrentStatus()" style="color:green" ng-if="!settingStatus" uib-tooltip="Check your current status?"></span>
+        <img src="ajax-loader.gif" ng-if="settingStatus">
+        <span ng-if="snoozeTimeReturnUnix">
+                <br/> <b>Snoozed until</b>: {{snoozeTimeReturnUnix | amFromUnix | amLocal | amDateFormat:'MM.DD.YYYY hh:mm:ss a'}}
+              </span>
+        <span ng-if="lastStatusSetTime">
+                <br/> <i>Last set </i>
+              </span>
+        <i><span am-time-ago="lastStatusSetTime" uib-tooltip="{{lastStatusSetTime | amUtc | amLocal | amDateFormat:'MM.DD.YYYY hh:mm:ss a'}}"></span></i> {{currentSnoozeStatus | json}}
+        <!-- DEBUGGING SECTION -->
+        <!--
+                <br/><pre>{{firstTime}} {{toggleSettings}}</pre>
+                <br/><pre>{{theRemoveSnooze | json}}</pre>
+                <br/><pre>{{theSetSnooze | json}}</pre>
+                <br/><pre>{{userDetails | json}}</pre>
+                <br/><pre>{{currentUserStatus | json}}</pre>
+                <br/><pre>{{theSetStatus | json}}</pre>
+                <br/><pre>{{theSetPresence | json}}</pre>
+                <br/><pre>{{slackstatuses | json}}</pre>
+-->
+      </div>
+    </div>
+    
+    <!-- LIST OF ALERTS -->
+    <div class='row' ng-if="alerts">
+      <div class='col-xs-12'>
+        <div uib-alert ng-repeat="alert in alerts" ng-class="'alert-' + (alert.type || 'warning')" close="closeAlert($index)">{{alert.msg}}</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- SCRIPT LIBS AND APP -->
+  <script type="text/javascript" src="libs/angular.min.js"></script>
+  <script type="text/javascript" src="libs/ui-bootstrap-tpls.min.js"></script>
+  <script type="text/javascript" src="libs/angular-animate.min.js"></script>
+  <script type="text/javascript" src="libs/angular-touch.min.js"></script>
+  <script type="text/javascript" src="libs/moment.min.js"></script>
+  <script type="text/javascript" src="libs/angular-moment.min.js"></script>
+  <script type="text/javascript" src="app/app.js"></script>
+</body>
+
+</html>

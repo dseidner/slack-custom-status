@@ -1,0 +1,21 @@
+.emoji-div.ng-animate {
+  transition: all ease 0.6s;
+}
+ 
+.emoji-div.ng-enter {
+  opacity: 0;
+}
+ 
+.emoji-div.ng-leave, 
+.emoji-div.ng-enter.ng-enter-active {
+  opacity: 1;
+}
+ 
+.emoji-div.ng-leave.ng-leave-active {
+  opacity: 0;
+}
+
+body {
+  min-width:550px;
+  background-color: #F0F0F0;
+}
